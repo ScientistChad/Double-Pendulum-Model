@@ -12,10 +12,8 @@ This is a ES6 based example utilizing Jquery and FabricJS. Numerical solutions a
 ## Numerical Solutions Documentation
 
 ### Double Pendulum Solution Set
-Source for the 4 1st order solutions: [Erik Neumann, MIT](http://web.mit.edu/jorloff/www/chaosTalk/double-pendulum/double-pendulum-en.html)
-<iframe src='http://web.mit.edu/jorloff/www/chaosTalk/double-pendulum/double-pendulum-en.html'>
+Source for the four 1st order solutions: [Erik Neumann, MIT](http://web.mit.edu/jorloff/www/chaosTalk/double-pendulum/double-pendulum-en.html)
 
 
 ### Runge-Kutta Alrgorithm
 Source for RK4 algorithm: [Erik Neumann, MIT](https://www.myphysicslab.com/explain/runge-kutta-en.html)
-<iframe src='https://www.myphysicslab.com/explain/runge-kutta-en.html'>
