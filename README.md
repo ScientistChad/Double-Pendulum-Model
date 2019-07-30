@@ -9,11 +9,17 @@ This is a ES6 based example utilizing Jquery and FabricJS. Numerical solutions a
 > Copyright (C) 2019 Chad Pyle - All Rights Reserved
 
 
+## Deployment and Instructions
+This project will deploy in any web server, ensure that the assets folder is included with index.html
+
+Operating this model is straight forward. Set the desired state conditions along the top, and click start
+
+
 ## Numerical Solutions Documentation
 
 ### Double Pendulum Solution Set
-Source for the four 1st order solutions: [Erik Neumann, MIT](http://web.mit.edu/jorloff/www/chaosTalk/double-pendulum/double-pendulum-en.html)
+Documentation reference for the four 1st order solutions: [Erik Neumann, MIT](http://web.mit.edu/jorloff/www/chaosTalk/double-pendulum/double-pendulum-en.html)
 
 
 ### Runge-Kutta Alrgorithm
-Source for RK4 algorithm: [Erik Neumann, MIT](https://www.myphysicslab.com/explain/runge-kutta-en.html)
+Documentation reference for RK4 algorithm: [Erik Neumann, MIT](https://www.myphysicslab.com/explain/runge-kutta-en.html)
