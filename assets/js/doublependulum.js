@@ -39,7 +39,7 @@ class DPM
         // Object 1 conditions
         this.m1 = parseFloat(this.input_m1.val());                      // mass of object 1
         this.l1 = parseFloat(this.input_l1.val());                      // length of arm 1
-        this.a1 = 0;                                                    // angle of arm 1 with vertical
+        this.a1 = 45;                                                   // angle of arm 1 with vertical
         this.w1 = 0;                                                    // angular velocity of object 1
         this.x1 = this.l1 * Math.sin(this.a1*this.rad);                 // x-coord of object 1
         this.y1 = this.l1 * Math.cos(this.a1*this.rad);                 // y-coord of object 1
@@ -47,15 +47,15 @@ class DPM
         // Object 2 conditions
         this.m2 = parseFloat(this.input_m2.val());                      // mass of object 2
         this.l2 = parseFloat(this.input_l2.val());                      // length of arm 2
-        this.a2 = 0;                                                    // angle of arm 2 with vertical
+        this.a2 = 45;                                                   // angle of arm 2 with vertical
         this.w2 = 0;                                                    // angular velocity of object 2
         this.x2 = this.x1 + this.l2 * Math.sin(this.a2*this.rad);       // x-coord of object 2
         this.y2 = this.l1 + this.l2 * Math.cos(this.a2*this.rad);       // y-coord of object 2
 
         // Global conditions
-        this.g = - this.input_g.val();                                  // gravity
+        this.g = this.input_g.val();                                  // gravity
         this.t = 0.0                                                    // time
-        this.t_s = 0.05                                                  // time step
+        this.t_s = 0.05                                                 // time step
     }
 }
 
@@ -381,29 +381,42 @@ class CalcEngine extends Modeler
     // 1 of 4 - 1st order equation of numerical solution set
     a1_dot(w1,w2)
     {
-        return w1;
+        return (w1/this.rad)*this.t_s;
     }
 
     // 2 of 4 - 1st order equation of numerical solution set
     a2_dot(w1,w2)
     {
-        return w2;
+        return (w2/this.rad)*this.t_s;
     }
 
     // 3 of 4 - 1st order equation of numerical solution set
     w1_dot(w1,w2)
     {
-        var num = this.f1(w2) - (this.alpha1() * this.f2(w1));
-        var den = 1 - (this.alpha1() * this.alpha2());
-        return (num/den);
+        var a12 = (this.a1 - this.a2);
+        var top1 = -this.g*(2*this.m1+this.m2)*Math.sin(this.a1*this.rad) - this.g*this.m2*Math.sin(a12*this.rad);
+        var top2 = -2*Math.sin(a12*this.rad)*this.m2*((w2**2)*this.l2+(w1**2)*this.l1*Math.cos(a12*this.rad));
+        var bot = this.l1*(2*this.m1+this.m2-this.m2*Math.cos(2*a12*this.rad));
+
+        return (top1+top2)/bot
+        //var num = this.f1(w2) - (this.alpha1() * this.f2(w1));
+        //var den = 1 - (this.alpha1() * this.alpha2());
+        //return (num/den);
     }
 
     // 4 of 4 - 1st order equation of numerical solution set
     w2_dot(w1,w2)
     {
-        var num = this.f2(w1) - (this.alpha2() * this.f1(w2));
-        var den = 1 - (this.alpha1() * this.alpha2());
-        return (num/den);
+        var m12 = (this.m1 + this.m2);
+        var a12 = (this.a1 - this.a2);
+        var top = 2*Math.sin(a12*this.rad)*((w1**2)*this.l1*(m12) + this.g*(m12)*Math.cos(this.a1*this.rad) + (w2**2)*this.l2*this.m2*Math.cos(a12*this.rad))
+        var bot = this.l1*(2*this.m1+this.m2-this.m2*Math.cos(2*a12*this.rad));
+        
+        console.log((top)/bot)
+        return (top)/bot
+        //var num = this.f2(w1) - (this.alpha2() * this.f1(w2));
+        //var den = 1 - (this.alpha1() * this.alpha2());
+        //return (num/den);
     }
     
     // Support function for w1_dot and w2_dot (above)
@@ -449,13 +462,13 @@ class RK4 extends CalcEngine
     {
         var that = this;
         
-        var dot_a1 = this.method(this.a1,null,step(this.a1),null,this.a1_dot.bind(this));
-        var dot_a2 = this.method(null,this.a2,null,step(this.a2),this.a2_dot.bind(this));
-        var dot_w1 = this.method(this.w1,this.w2,step(this.w1),step(this.w2),this.w1_dot.bind(this));
-        var dot_w2 = this.method(this.w1,this.w2,step(this.w1),step(this.w2),this.w2_dot.bind(this));
+        var dot_w1 = this.method(this.w1,this.w2,0,0,this.w1_dot.bind(this));
+        var dot_w2 = this.method(this.w1,this.w2,0,0,this.w2_dot.bind(this));
+        var dot_a1 = this.method(dot_w1,0,step(dot_w1),0,this.a1_dot.bind(this));
+        var dot_a2 = this.method(0,dot_w2,0,step(dot_w2),this.a2_dot.bind(this));
 
-        this.a1 = dot_a1;
-        this.a2 = dot_a2;
+        this.a1 += dot_a1;
+        this.a2 += dot_a2;
         this.w1 = dot_w1;
         this.w2 = dot_w2;
 
@@ -467,9 +480,7 @@ class RK4 extends CalcEngine
     }
 
     // Actual numerical calculations of RK4 algorithm
-    method(val1,val2,step1,step2,fxn){
-        var that = this;
-        
+    method(val1,val2,step1,step2,fxn){        
         var a = this.a(val1+step1,val2+step2,fxn);
         var b = this.b(val1+step1,val2+step2,fxn);
         var c = this.c(val1+step1,val2+step2,fxn);
