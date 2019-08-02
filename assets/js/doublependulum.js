@@ -39,21 +39,21 @@ class DPM
         // Object 1 conditions
         this.m1 = parseFloat(this.input_m1.val());                      // mass of object 1
         this.l1 = parseFloat(this.input_l1.val());                      // length of arm 1
-        this.a1 = 45;                                                   // angle of arm 1 with vertical
+        this.a1 = 45*this.rad;                                          // angle of arm 1 with vertical
         this.w1 = 0;                                                    // angular velocity of object 1
-        this.x1 = this.l1 * Math.sin(this.a1*this.rad);                 // x-coord of object 1
-        this.y1 = this.l1 * Math.cos(this.a1*this.rad);                 // y-coord of object 1
+        this.x1 = this.l1 * Math.sin(this.a1);                          // x-coord of object 1
+        this.y1 = this.l1 * Math.cos(this.a1);                          // y-coord of object 1
 
         // Object 2 conditions
         this.m2 = parseFloat(this.input_m2.val());                      // mass of object 2
         this.l2 = parseFloat(this.input_l2.val());                      // length of arm 2
-        this.a2 = 45;                                                   // angle of arm 2 with vertical
+        this.a2 = 45*this.rad;                                          // angle of arm 2 with vertical
         this.w2 = 0;                                                    // angular velocity of object 2
-        this.x2 = this.x1 + this.l2 * Math.sin(this.a2*this.rad);       // x-coord of object 2
-        this.y2 = this.l1 + this.l2 * Math.cos(this.a2*this.rad);       // y-coord of object 2
+        this.x2 = this.x1 + this.l2 * Math.sin(this.a2);                // x-coord of object 2
+        this.y2 = this.l1 + this.l2 * Math.cos(this.a2);                // y-coord of object 2
 
         // Global conditions
-        this.g = this.input_g.val();                                  // gravity
+        this.g = this.input_g.val();                                    // gravity
         this.t = 0.0                                                    // time
         this.t_s = 0.05                                                 // time step
     }
@@ -239,12 +239,12 @@ class AppUI extends DPM
                 var ctr_x = 0;
                 var ctr_y = 0 + that.l1;
                 var rad = Math.atan2(p.top + ctr_y, p.left + ctr_x)
-                that.a1 = 90 - (rad / that.rad)
+                that.a1 = rad
             }else if(p.type === 'obj2'){
                 var ctr_x = that.x1;
                 var ctr_y = that.y1 + that.l2;
                 var rad = Math.atan2(p.top + ctr_y, p.left + ctr_x)
-                that.a2 = 90 - (rad / that.rad)
+                that.a2 = rad
             }
             
             that.renderObjects();
@@ -262,10 +262,10 @@ class AppUI extends DPM
     renderObjects()
     {
         var that = this;
-        this.x1 = this.l1 * Math.sin(this.a1*this.rad);
-        this.y1 = this.l1 * Math.cos(this.a1*this.rad);
-        this.x2 = this.x1 + this.l2 * Math.sin(this.a2*this.rad);
-        this.y2 = this.y1 + this.l2 * Math.cos(this.a2*this.rad);
+        this.x1 = this.l1 * Math.sin(this.a1);
+        this.y1 = this.l1 * Math.cos(this.a1);
+        this.x2 = this.x1 + this.l2 * Math.sin(this.a2);
+        this.y2 = this.y1 + this.l2 * Math.cos(this.a2);
 
         this.obj1.left = this.x1;
         this.obj1.top = this.y1;
@@ -334,10 +334,10 @@ class Modeler extends AppUI
         var that = this;
         if(!this.isModeling){ return }
 
-        this.x1 = this.l1 * Math.sin(this.a1*this.rad);
-        this.y1 = this.l1 * Math.cos(this.a1*this.rad);
-        this.x2 = this.x1 + this.l2 * Math.sin(this.a2*this.rad);
-        this.y2 = this.y1 + this.l2 * Math.cos(this.a2*this.rad);
+        this.x1 = this.l1 * Math.sin(this.a1);
+        this.y1 = this.l1 * Math.cos(this.a1);
+        this.x2 = this.x1 + this.l2 * Math.sin(this.a2);
+        this.y2 = this.y1 + this.l2 * Math.cos(this.a2);
 
         this.obj1.left = this.x1;
         this.obj1.top = this.y1;
@@ -346,14 +346,14 @@ class Modeler extends AppUI
 
         this.line1.set({ x2:that.x1, y2:that.y1 });
         this.line2.set({ x1:that.x1, y1:that.y1, x2:that.x2, y2:that.y2 });
-
+        
         this.canvas.renderAll();
     }
 
     // Tracks modeling time per loop
     stopWatch()
     {
-        this.time += this.t_s;
+        this.t += this.t_s;
 
         this.t_mil += 5;
         if(this.t_mil > 95){
@@ -379,73 +379,40 @@ class CalcEngine extends Modeler
     }
 
     // 1 of 4 - 1st order equation of numerical solution set
-    a1_dot(w1,w2)
+    a1_dot(w1)
     {
-        return (w1/this.rad)*this.t_s;
+        return w1;
     }
 
     // 2 of 4 - 1st order equation of numerical solution set
-    a2_dot(w1,w2)
+    a2_dot(w2)
     {
-        return (w2/this.rad)*this.t_s;
+        return w2;
     }
 
     // 3 of 4 - 1st order equation of numerical solution set
-    w1_dot(w1,w2)
-    {
-        var a12 = (this.a1 - this.a2);
-        var top1 = -this.g*(2*this.m1+this.m2)*Math.sin(this.a1*this.rad) - this.g*this.m2*Math.sin(a12*this.rad);
-        var top2 = -2*Math.sin(a12*this.rad)*this.m2*((w2**2)*this.l2+(w1**2)*this.l1*Math.cos(a12*this.rad));
-        var bot = this.l1*(2*this.m1+this.m2-this.m2*Math.cos(2*a12*this.rad));
-
-        return (top1+top2)/bot
-        //var num = this.f1(w2) - (this.alpha1() * this.f2(w1));
-        //var den = 1 - (this.alpha1() * this.alpha2());
-        //return (num/den);
-    }
-
-    // 4 of 4 - 1st order equation of numerical solution set
-    w2_dot(w1,w2)
+    w1_dot(w1)
     {
         var m12 = (this.m1 + this.m2);
         var a12 = (this.a1 - this.a2);
-        var top = 2*Math.sin(a12*this.rad)*((w1**2)*this.l1*(m12) + this.g*(m12)*Math.cos(this.a1*this.rad) + (w2**2)*this.l2*this.m2*Math.cos(a12*this.rad))
-        var bot = this.l1*(2*this.m1+this.m2-this.m2*Math.cos(2*a12*this.rad));
+        var top1 = -this.g*(2*m12)*Math.sin(this.a1) - this.g*this.m2*Math.sin(a12);
+        var top2 = -2*Math.sin(a12)*this.m2*((this.w2**2)*this.l2 + (w1**2)*this.l1*Math.cos(a12));
+        var bot = this.l1*(2*this.m1+this.m2-this.m2*Math.cos(2*a12));
+
+        return (top1+top2)/bot
+    }
+
+    // 4 of 4 - 1st order equation of numerical solution set
+    w2_dot(w2)
+    {
+        var m12 = (this.m1 + this.m2);
+        var a12 = (this.a1 - this.a2);
+        var top = 2*Math.sin(a12)*((this.w1**2)*this.l1*(m12) + this.g*(m12)*Math.cos(this.a1) + (w2**2)*this.l2*this.m2*Math.cos(a12))
+        var bot = this.l1*(2*this.m1+this.m2-this.m2*Math.cos(2*a12));
         
-        console.log((top)/bot)
         return (top)/bot
-        //var num = this.f2(w1) - (this.alpha2() * this.f1(w2));
-        //var den = 1 - (this.alpha1() * this.alpha2());
-        //return (num/den);
     }
     
-    // Support function for w1_dot and w2_dot (above)
-    f1(w2)
-    {
-        var val = - (((this.l2 / this.l1) * (this.m2 / (this.m1 + this.m2))) * w2**2 * Math.sin((this.a1 - this.a2)*this.rad)) - ((this.g / this.l1) * Math.sin(this.a1*this.rad));
-        return val;
-    }
-
-    // Support function for w1_dot and w2_dot (above
-    f2(w1)
-    {
-        var val = ((this.l1 / this.l2) * w1**2 * Math.sin((this.a1 - this.a2)*this.rad)) - (this.g / this.l2) * Math.sin(this.a2*this.rad);
-        return val;
-    }
-
-    // Support function for w1_dot and w2_dot (above
-    alpha1()
-    {
-        var val = (this.l2 / this.l1) * (this.m2 / (this.m1 + this.m2)) * Math.cos((this.a1 - this.a2)*this.rad);
-        return val;
-    }
-
-    // Support function for w1_dot and w2_dot (above
-    alpha2()
-    {
-        var val = (this.l1 / this.l2) * Math.cos((this.a1 + this.a2)*this.rad);
-        return val;
-    }
 }
 
 /* Class - Runge-Kutta 4th order algorithm [full documentation found in README.md] */
@@ -460,53 +427,65 @@ class RK4 extends CalcEngine
     // Sets main approximation loops for all 4 solution sets
     rk4_approx()
     {
-        var that = this;
-        
-        var dot_w1 = this.method(this.w1,this.w2,0,0,this.w1_dot.bind(this));
-        var dot_w2 = this.method(this.w1,this.w2,0,0,this.w2_dot.bind(this));
-        var dot_a1 = this.method(dot_w1,0,step(dot_w1),0,this.a1_dot.bind(this));
-        var dot_a2 = this.method(0,dot_w2,0,step(dot_w2),this.a2_dot.bind(this));
+        var dot_w1 = this.method(this.w1,this.w1_dot.bind(this));
+        var dot_w2 = this.method(this.w2,this.w2_dot.bind(this));
+        var dot_a1 = this.method(this.w1,this.a1_dot.bind(this));
+        var dot_a2 = this.method(this.w2,this.a2_dot.bind(this));
 
-        this.a1 += dot_a1;
-        this.a2 += dot_a2;
-        this.w1 = dot_w1;
-        this.w2 = dot_w2;
+        this.a1 += dot_a1 * this.t;
+        this.a2 += dot_a2 * this.t;
+        this.w1 += dot_w1 * this.t;
+        this.w2 += dot_w2 * this.t;
 
+console.log(this.a1,this.w1)
+console.log(this.a2,this.w2)
+console.log('----------------')        
         this.activeRender();
-
-        function step(val){
-            return val * that.t_s;
-        }
     }
 
     // Actual numerical calculations of RK4 algorithm
-    method(val1,val2,step1,step2,fxn){        
-        var a = this.a(val1+step1,val2+step2,fxn);
-        var b = this.b(val1+step1,val2+step2,fxn);
-        var c = this.c(val1+step1,val2+step2,fxn);
-        var d = this.d(val1+step1,val2+step2,fxn);
+    /*
+        x' = f (t, x)
+        xn+1 = xn + h⁄6 (a + 2 b + 2 c + d)
+        a = f (tn, xn)
+        b = f (tn + h⁄2, xn + h⁄2 a)
+        c = f (tn + h⁄2, xn + h⁄2 b)
+        d = f (tn + h, xn + h c)
+    */
+    method(val,fxn){        
+        var a = this.a(val,fxn);
+        var b = this.b(val,fxn);
+        var c = this.c(val,fxn);
+        var d = this.d(val,fxn);
         
-        return fxn(val1,val2) + (this.t_s/6) * (a + 2*b + 2*c + d)
+        return fxn(val) + (this.t_s/6) * (a + 2*b + 2*c + d)
     }
 
     // Support function for method (above)
-    a(val1,val2,fxn){
-        return fxn(val1,val2);
+    a(val,fxn){
+        return fxn(val);
     }
 
     // Support function for method (above)
-    b(val,val2,fxn){
-        return fxn(val,val2) + ((this.t_s/2) * this.a(val,val2,fxn));
+    b(val,fxn){
+        val += val * (this.t_s/2);
+        return fxn(val + (this.t_s/2)*this.a(val,fxn));
     }
 
     // Support function for method (above)
-    c(val,val2,fxn){
-        return fxn(val,val2) + ((this.t_s/2) * this.b(val,val2,fxn));
+    c(val,fxn){
+        val += val * (this.t_s/2);
+        return fxn(val + (this.t_s/2)*this.b(val,fxn));
     }
     
     // Support function for method (above)
-    d(val,val2,fxn){
-        return fxn(val,val2) + (this.t_s * this.c(val,val2,fxn));
+    d(val,fxn){
+        val += val * (this.t_s/2);
+        return fxn(val + this.t_s*this.c(val,fxn));
+    }
+
+    step(val){
+        return val * this.t;
     }
 
 }
