@@ -427,15 +427,15 @@ class RK4 extends CalcEngine
     // Sets main approximation loops for all 4 solution sets
     rk4_approx()
     {
-        var dot_w1 = this.method(this.w1,this.w1_dot.bind(this));
-        var dot_w2 = this.method(this.w2,this.w2_dot.bind(this));
         var dot_a1 = this.method(this.w1,this.a1_dot.bind(this));
         var dot_a2 = this.method(this.w2,this.a2_dot.bind(this));
+        var dot_w1 = this.method(this.w1,this.w1_dot.bind(this));
+        var dot_w2 = this.method(this.w2,this.w2_dot.bind(this));
 
-        this.a1 += dot_a1 * this.t;
-        this.a2 += dot_a2 * this.t;
-        this.w1 += dot_w1 * this.t;
-        this.w2 += dot_w2 * this.t;
+        this.a1 += dot_a1 * this.t_s;
+        this.a2 += dot_a2 * this.t_s;
+        this.w1 = dot_w1;
+        this.w2 = dot_w2;
 
 console.log(this.a1,this.w1)
 console.log(this.a2,this.w2)
@@ -458,7 +458,7 @@ console.log('----------------')
         var c = this.c(val,fxn);
         var d = this.d(val,fxn);
         
-        return fxn(val) + (this.t_s/6) * (a + 2*b + 2*c + d)
+        return val + (this.t_s/6) * (a + 2*b + 2*c + d)
     }
 
     // Support function for method (above)
@@ -468,24 +468,17 @@ console.log('----------------')
 
     // Support function for method (above)
     b(val,fxn){
-        val += val * (this.t_s/2);
         return fxn(val + (this.t_s/2)*this.a(val,fxn));
     }
 
     // Support function for method (above)
     c(val,fxn){
-        val += val * (this.t_s/2);
         return fxn(val + (this.t_s/2)*this.b(val,fxn));
     }
     
     // Support function for method (above)
     d(val,fxn){
-        val += val * (this.t_s/2);
         return fxn(val + this.t_s*this.c(val,fxn));
-    }
-
-    step(val){
-        return val * this.t;
     }
 
 }
